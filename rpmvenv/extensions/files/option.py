@@ -11,7 +11,7 @@ except NameError:
     basestring = str
 
 RpmFile = namedtuple('RpmFile',
-                     ['src', 'dest', 'file_type', 'file_type_option'])
+                     ['src', 'dest', 'file_type', 'file_type_option', 'attr'])
 
 
 class FileOption(option.Option):
@@ -43,6 +43,7 @@ class FileOption(option.Option):
 
             file_type = None
             file_type_option = None
+            attr = None
 
             config_type = value.get('config', False)
             if config_type:
@@ -52,10 +53,18 @@ class FileOption(option.Option):
             elif value.get('doc', False):
                 file_type = 'doc'
 
+            attr_str = value.get('attr', None)
+            if attr_str:
+                attr = tuple(map(str.strip, attr_str.split(',')))
+                if len(attr) != 3:
+                    # mode, user, group
+                    raise ValueError("File attr definition {0} must have three parts: mode, user, group".format(attr))
+
             return RpmFile(src=value['src'],
                            dest=value['dest'],
                            file_type=file_type,
-                           file_type_option=file_type_option)
+                           file_type_option=file_type_option,
+                           attr=attr)
 
         elif isinstance(value, basestring):
             try:
@@ -63,7 +72,8 @@ class FileOption(option.Option):
                 return RpmFile(src=src,
                                dest=dest,
                                file_type=None,
-                               file_type_option=None)
+                               file_type_option=None,
+                               attr=None)
             except ValueError:
                 raise ValueError('The value {0} is missing a :'.format(value))
 

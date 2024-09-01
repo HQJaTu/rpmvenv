@@ -59,6 +59,11 @@ class Extension(interface.Extension):
                 # simple file without an extra modifiers
                 file_directive = '/{0}'.format(file_.dest)
 
+            # Attributes defined?
+            if file_.attr:
+                file_directive = "%attr({}, {}, {}) {}".format(
+                    file_.attr[0], file_.attr[1], file_.attr[2], file_directive)
+
             spec.blocks.install.append(
                 'mkdir -p "%{{buildroot}}/%(dirname {0})"'.format(file_.dest)
             )
@@ -69,10 +74,6 @@ class Extension(interface.Extension):
                 )
             )
             spec.blocks.files.append(file_directive)
-            spec.blocks.post.append(
-                'chown -R '
-                '%{{file_permissions_user}}:%{{file_permissions_group}} '
-                '/{0}'.format(file_.dest)
-            )
+            # NOTE: File permissions should be handled by %attr(), not in post.
 
         return spec
